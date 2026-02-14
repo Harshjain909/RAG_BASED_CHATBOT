@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f4f4;
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #chat {
+            background: white;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        .user {
+            color: blue;
+            margin: 5px 0;
+        }
+
+        .bot {
+            color: green;
+            margin: 5px 0;
+            white-space: pre-line;  /* ADD THIS LINE */
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>PDF Chatbot</h2>
+
+<div class="upload-section">
+    <input type="file" id="fileInput" />
+    <button onclick="uploadFile()">Upload</button>
+</div>
+
+<div id="chat"></div>
+
+<input type="text" id="question" placeholder="Ask a question..." />
+<button onclick="askQuestion()">Send</button>
+
+<script>
+
+async function createSession() {
+    await fetch("/session");
+}
+
+async function uploadFile() {
+    const file = document.getElementById("fileInput").files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch("/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    alert("Document uploaded successfully!");
+}
+
+async function askQuestion() {
+    const questionInput = document.getElementById("question");
+    const question = questionInput.value;
+
+    if (!question) return;
+
+    const chatDiv = document.getElementById("chat");
+
+    chatDiv.innerHTML += `<div class="user"><b>You:</b> ${question}</div>`;
+
+    const response = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question })
+    });
+
+    const data = await response.json();
+
+    chatDiv.innerHTML += `<div class="bot"><b>Bot:</b> ${data.answer}</div>`;
+
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+
+    questionInput.value = "";
+}
+
+createSession();
+
+</script>
+
+</body>
+</html>
